@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 const logger = require("./lib/logger")
 require("dotenv").config()
 
-const { handleUserCreation, handleUserUpdate } = require("./listeners")
+const { handleLogin } = require("./listeners")
 
 async function main() {
   try {
@@ -19,13 +19,11 @@ async function main() {
 }
 async function redisPubSub() {
   const nrp = new NRP({
-    // url: process.env.REDIS_CONNECTION_STRING
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT
   }) // This is the NRP client
 
-  nrp.on("user::create", handleUserCreation)
-  nrp.on("user::update", handleUserUpdate)
+  nrp.on("user::login", handleLogin)
 }
 
 main()

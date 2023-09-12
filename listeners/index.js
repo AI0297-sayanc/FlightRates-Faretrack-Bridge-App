@@ -1,8 +1,26 @@
+const User = require("../models/User")
+const logger = require("../lib/logger")
+const { loginService } = require("../services")
+
 module.exports = {
-  async handleUserCreation(doc) {
-    console.log("User Create ...==> ", doc)
-  },
-  async handleUserUpdate(doc) {
-    console.log("User Update ==> ", doc)
-  },
+  async handleLogin(doc) {
+    try {
+      const { handle: username, password } = doc.data
+      const {
+        userName,
+        faretrackToken
+      } = await loginService({
+        username,
+        password,
+        grant_type: "password"
+      })
+      await User.create({
+        userName,
+        faretrackToken,
+      })
+      logger.info("Sucessfully LoggedIn !!")
+    } catch (err) {
+      throw new Error(`Error ${err}`)
+    }
+  }
 }
