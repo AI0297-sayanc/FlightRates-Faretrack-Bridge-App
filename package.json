@@ -1,0 +1,34 @@
+{
+  "name": "flightrates-faretrack-bridge-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "npm run serve:dev",
+    "serve:dev": "nodemon ./index.js",
+    "serve:prod": "node ./index.js",
+    "debug": "nodemon --inspect ./index.js",
+    "lint": "npm run lint:quiet",
+    "lint:quiet": "eslint --quiet './**/*.js'",
+    "lint:all": "eslint './**/*.js'",
+    "lint:fix": "eslint './**/*.js' --quiet --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cronstrue": "^2.32.0",
+    "dotenv": "^16.3.1",
+    "mongoose": "^7.5.1",
+    "node-redis-pubsub": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.31.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "nodemon": "^3.0.1"
+  }
+}
