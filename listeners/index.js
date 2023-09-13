@@ -1,4 +1,3 @@
-const mongoose = require("mongoose")
 const User = require("../models/User")
 const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
