@@ -120,7 +120,6 @@ module.exports = {
           visualizetable: true
         }
       ], [])
-      console.log("docValue ==> ", docValue);return;
       docValue.forEach(async (value) => {
         const marketValue = await addMarket(value, user.faretrackToken)
         const {
