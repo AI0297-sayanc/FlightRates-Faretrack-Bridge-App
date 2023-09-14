@@ -3,6 +3,7 @@ const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
 const Market = require("../models/Market")
 const Shop = require("../models/flightrates/Shop")
+const { horizonDateConverter } = require("../lib")
 
 module.exports = {
   async handleLogin(doc) {
@@ -62,7 +63,8 @@ module.exports = {
           })
           .exec()
       ])
-      const docValue = shop._OD.reduce((acc, cur) => [
+      const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
+      const docValue = await shop._OD.reduce(async (acc, cur) => [
         {
           ...acc,
           fsid: null,
@@ -70,19 +72,21 @@ module.exports = {
           shopname: shop.shopName,
           flyfrom: cur._flyFrom.airportCode,
           flyto: cur._flyTo.airportCode,
+          carriers: null,
           cabinclass: shop._cabinClasses.map((c) => c.code),
           sources: shop._sources.map((s) => s.code),
           routetype: {
-            rt_type: shop.isRoundTrip ? 1 : 0,
-            los: shop.los,
-            losval: null
+            rt_type: shop.isRoundTrip ? 2 : 1,
+            los: shop.los !== 0 ? [shop.los] : null,
+            losval: shop.los !== 0 ? shop.los : null
           },
-          los: shop.los,
-          horizon: 1,
+          los: null,
+          horizon: await horizonDateConverter(shop.horizons, "ONLY_SINGLE_DAY"),
+          horizon_days: await horizonDateConverter(shop.horizons, "DAY_RANGE"),
           horizon_startday: 0,
           horizon_endday: 0,
-          horizon_startdate: null,
-          horizon_enddate: null,
+          horizon_startdate: dateRange.startDate,
+          horizon_enddate: dateRange.endDate,
           pax: {
             adults: shop.pax.adults,
             infants: shop.pax.infants
@@ -116,6 +120,7 @@ module.exports = {
           visualizetable: true
         }
       ], [])
+      console.log("docValue ==> ", docValue);return;
       docValue.forEach(async (value) => {
         const marketValue = await addMarket(value, user.faretrackToken)
         const {
