@@ -3,12 +3,12 @@ const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
 const Market = require("../models/Market")
 const Shop = require("../models/flightrates/Shop")
-const { horizonDateConverter } = require("../lib")
+const { horizonDateConverter, scheduleConvert } = require("../lib")
 
 module.exports = {
   async handleLogin(doc) {
     try {
-      const { handle: username, password } = doc.data
+      const { handle: username, password, isTablueUser } = doc.data
       const {
         userName,
         faretrackToken
@@ -20,6 +20,7 @@ module.exports = {
       await User.create({
         userName,
         faretrackToken,
+        isTablueUser
       })
       return logger.info("Sucessfully LoggedIn !!")
     } catch (err) {
@@ -32,7 +33,7 @@ module.exports = {
       const [user, shop] = await Promise.all([
         User.findOne({ userName })
           .sort({ createdAt: -1 })
-          .select("userName faretrackToken")
+          .select("userName faretrackToken isTablueUser")
           .exec(),
         Shop.findOne({
           _id: _shop,
@@ -72,7 +73,7 @@ module.exports = {
           shopname: shop.shopName,
           flyfrom: cur._flyFrom.airportCode,
           flyto: cur._flyTo.airportCode,
-          carriers: null,
+          carriers: null, // Pending
           cabinclass: shop._cabinClasses.map((c) => c.code),
           sources: shop._sources.map((s) => s.code),
           routetype: {
@@ -92,34 +93,26 @@ module.exports = {
             infants: shop.pax.infants
           },
           frequency: {
-            refresh: "Daily",
-            days: [1],
+            refresh: await scheduleConvert(doc.data.crontabExpression, "REFERSH"),
+            days: await scheduleConvert(doc.data.crontabExpression, "DAYS"),
             time: [
               {
-                starttime: "03:45 pm",
-                timezone: "Africa/Addis_Ababa"
+                starttime: "03:45 pm", // Pending ask murali
+                timezone: doc.data.timezoneName
               }
             ],
-            startdate: "2023-08-24",
-            enddate: "2023-08-24"
+            startdate: doc.data.startDate,
+            enddate: doc.data.endDate
           },
           pos: shop._pos.region,
           currency: shop._currency.iso,
-          historical_horizon: 30,
-          historical_frequency: {
-            refresh: "Daily",
-            days: [],
-            time: [
-              {
-                starttime: "03:45 pm",
-                timezone: "Africa/Abidjan"
-              }
-            ]
-          },
+          historical_horizon: 0,
+          historical_frequency: null,
           rateshoptable: false,
-          visualizetable: true
+          visualizetable: user.isTablueUser
         }
       ], [])
+      console.log("docValue ==> ", docValue[0]);return;
       docValue.forEach(async (value) => {
         const marketValue = await addMarket(value, user.faretrackToken)
         const {

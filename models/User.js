@@ -5,6 +5,9 @@ const UserSchema = new mongoose.Schema({
   _user: {
     type: mongoose.Schema.Types.ObjectId, // Flightrates only
   },
+  isTablueUser: { // Both
+    type: Boolean
+  },
   userName: String, // Both used
   faretrackUserId: Number, // Faretrack only
   faretrackToken: {

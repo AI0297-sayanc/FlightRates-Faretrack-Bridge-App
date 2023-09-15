@@ -23,6 +23,7 @@ module.exports = {
   },
   async addMarket(doc, token) {
     try {
+      return { Fsid: 390 }
       const options = {
         method: "POST",
         headers: {
