@@ -62,6 +62,9 @@ module.exports = {
           .populate({
             path: "_cabinClasses", select: "-isDeleted -_createdBy -_updatedBy -__v", options: { sort: { _id: -1 } }, isDeleted: { $eq: false }
           })
+          .populate({
+            path: "_carriers", select: "-isDeleted -_createdBy -_updatedBy -__v", options: { sort: { _id: -1 } }, isDeleted: { $eq: false }
+          })
           .exec()
       ])
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
@@ -73,9 +76,9 @@ module.exports = {
           shopname: shop.shopName,
           flyfrom: cur._flyFrom.airportCode,
           flyto: cur._flyTo.airportCode,
-          carriers: null, // Pending
+          carriers: shop._carriers.map((c) => c.code), // Pending
           cabinclass: shop._cabinClasses.map((c) => c.code),
-          sources: shop._sources.map((s) => s.code),
+          sources: shop._sources.map((s) => +s.code),
           routetype: {
             rt_type: shop.isRoundTrip ? 2 : 1,
             los: shop.los !== 0 ? [shop.los] : null,
@@ -97,7 +100,7 @@ module.exports = {
             days: await scheduleConvert(doc.data.crontabExpression, "DAYS"),
             time: [
               {
-                starttime: "03:45 pm", // Pending ask murali
+                starttime: doc.data.startTime, // Pending ask murali
                 timezone: doc.data.timezoneName
               }
             ],
@@ -112,7 +115,7 @@ module.exports = {
           visualizetable: user.isTablueUser
         }
       ], [])
-      console.log("docValue ==> ", docValue[0]);return;
+      console.log("docValue ==> ", docValue)
       docValue.forEach(async (value) => {
         const marketValue = await addMarket(value, user.faretrackToken)
         const {

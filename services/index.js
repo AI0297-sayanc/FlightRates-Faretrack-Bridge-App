@@ -23,7 +23,6 @@ module.exports = {
   },
   async addMarket(doc, token) {
     try {
-      return { Fsid: 390 }
       const options = {
         method: "POST",
         headers: {
@@ -32,10 +31,12 @@ module.exports = {
         },
         body: JSON.stringify(doc)
       }
-      const response = await fetch("localhost:3000/addmarket", options)
+      const response = await fetch(`${url}/addmarket`, options)
       if (!response.ok) {
+        console.log("response ==> ", response)
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
+      console.log("response ==> ", response)
       const { Fsid } = await response.json()
       return { Fsid }
     } catch (err) {

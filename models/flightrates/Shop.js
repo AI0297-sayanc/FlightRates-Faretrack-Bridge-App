@@ -7,6 +7,7 @@ const CabinClass = require("./references/Cabinclass")
 const Pos = require("./references/Pos")
 const Currency = require("./references/Currency")
 const User = require("./User")
+const Airline = require("./references/Airline")
 
 const ShopSchema = new mongoose.Schema({
   _OD: [
@@ -49,6 +50,12 @@ const ShopSchema = new mongoose.Schema({
     },
   ],
 
+  _carriers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: Airline
+    }
+  ],
   pax: {
     adults: {
       type: Number,
