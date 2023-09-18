@@ -120,18 +120,23 @@ module.exports = {
         }
       ], [])
       const marketArr = []
-      console.log("docValue ==> ", docValue)
-      docValue.forEach(async (value) => {
-        const Fsid = await addMarket(value, user.faretrackToken)
-        if (!Fsid) return logger.error("Fsid not found !")
-        return marketArr.push({
-          faretrackFrequency: value.frequency,
-          userName,
-          _shop,
-          _schedule,
-          fsId: Fsid
-        })
-      })
+      // eslint-disable-next-line no-restricted-syntax
+      for (const value of docValue) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const Fsid = await addMarket(value, user.faretrackToken)
+          if (!Fsid) logger.error("Fsid not found !")
+          marketArr.push({
+            faretrackFrequency: value.frequency,
+            userName,
+            _shop,
+            _schedule,
+            fsId: Fsid
+          })
+        } catch (error) {
+          logger.error(`Error ${error}`)
+        }
+      }
       await Market.insertMany(marketArr)
       return logger.info("Sucessfully shop and schedule mapped !!")
     } catch (err) {

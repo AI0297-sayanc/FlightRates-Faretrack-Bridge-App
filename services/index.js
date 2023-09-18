@@ -23,17 +23,15 @@ module.exports = {
   },
   async addMarket(doc, token) {
     try {
-      console.log("token ==> ", token)
       const options = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           // eslint-disable-next-line quote-props
-          "Authentication": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(doc)
       }
-      console.log("options ==> ", options)
       const response = await fetch(`${url}/addmarket`, options)
       if (!response.ok) {
         const errorText = await response.json()
