@@ -30,7 +30,7 @@ module.exports = {
   async handleMarket(doc) {
     try {
       const { userName, _shop, _id: _schedule } = doc.data
-      if (!userName || !_shop || _schedule) return logger.error("Malformed payload !")
+      if (!userName || !_shop || !_schedule) return logger.error("Malformed payload !")
       const [user, shop] = await Promise.all([
         User.findOne({ userName })
           .sort({ createdAt: -1 })
@@ -119,20 +119,20 @@ module.exports = {
           visualizetable: user.isTablueUser
         }
       ], [])
+      const marketArr = []
       console.log("docValue ==> ", docValue)
       docValue.forEach(async (value) => {
-        const marketValue = await addMarket(value, user.faretrackToken)
-        const {
-          Fsid: fsId
-        } = marketValue
-        await Market.create({
+        const Fsid = await addMarket(value, user.faretrackToken)
+        if (!Fsid) return logger.error("Fsid not found !")
+        return marketArr.push({
           faretrackFrequency: value.frequency,
           userName,
           _shop,
           _schedule,
-          fsId
+          fsId: Fsid
         })
       })
+      await Market.insertMany(marketArr)
       return logger.info("Sucessfully shop and schedule mapped !!")
     } catch (err) {
       return logger.error(`Error ${err}`)

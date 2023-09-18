@@ -13,34 +13,36 @@ module.exports = {
       }
       const response = await fetch(`${url}/authtoken`, options)
       if (!response.ok) {
-        return logger.error(`HTTP error! Status: ${response.status} Message: ${response.message}`)
+        return logger.error(`Faretrack login service error: ${response.status} `)
       }
       const { username: userName, access_token: faretrackToken } = await response.json()
       return { userName, faretrackToken }
     } catch (err) {
-      return logger.error(`Error ${err}`)
+      return logger.error(`Faretrack login service error ${err}`)
     }
   },
   async addMarket(doc, token) {
     try {
+      console.log("token ==> ", token)
       const options = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authentication: `Bearer ${token}`
+          // eslint-disable-next-line quote-props
+          "Authentication": `Bearer ${token}`
         },
         body: JSON.stringify(doc)
       }
+      console.log("options ==> ", options)
       const response = await fetch(`${url}/addmarket`, options)
       if (!response.ok) {
-        console.log("response ==> ", response)
-        throw new Error(`HTTP error! Status: ${response.status}`)
+        const errorText = await response.json()
+        throw new Error(`Faretrack addmarket service error: ${response.status}, message: ${errorText.Message}`)
       }
-      console.log("response ==> ", response)
       const { Fsid } = await response.json()
-      return { Fsid }
+      return Fsid
     } catch (err) {
-      return logger.error(`Faretrack addmarket service error: ${err}`)
+      return logger.error(`Faretrack addmarket service error: ${err.message}`)
     }
   }
 }
