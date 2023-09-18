@@ -30,6 +30,7 @@ module.exports = {
   async handleMarket(doc) {
     try {
       const { userName, _shop, _id: _schedule } = doc.data
+      if (!userName || !_shop || _schedule) return logger.error("Malformed payload !")
       const [user, shop] = await Promise.all([
         User.findOne({ userName })
           .sort({ createdAt: -1 })
@@ -67,6 +68,9 @@ module.exports = {
           })
           .exec()
       ])
+      if (user === null) return logger.error("Invaild user !")
+      if (shop === null) return logger.error("Invaild shop !")
+      if (!user.faretrackToken) return logger.error("Faretracktoken not found !!")
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
       const docValue = await shop._OD.reduce(async (acc, cur) => [
         {

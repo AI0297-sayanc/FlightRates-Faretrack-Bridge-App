@@ -40,7 +40,7 @@ module.exports = {
       const { Fsid } = await response.json()
       return { Fsid }
     } catch (err) {
-      return logger.error(`Error ${err}`)
+      return logger.error(`Faretrack addmarket service error: ${err}`)
     }
   }
 }
