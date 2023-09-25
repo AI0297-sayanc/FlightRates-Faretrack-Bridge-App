@@ -3,7 +3,7 @@ const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
 const Market = require("../models/Market")
 const Shop = require("../models/flightrates/Shop")
-const { horizonDateConverter, scheduleConvert } = require("../lib")
+const { horizonDateConverter, scheduleConvert, flightRatesApiRollback } = require("../lib")
 
 module.exports = {
   async handleLogin(doc) {
@@ -22,15 +22,24 @@ module.exports = {
         faretrackToken,
         isTablueUser
       })
-      return logger.info("Sucessfully LoggedIn !!")
+      return logger.info("Sucessfully LoggedIn ✅!!")
     } catch (err) {
-      return logger.error(`Error ${err}`)
+      return logger.error(`Error ❎ ${err}`)
     }
   },
   async handleMarket(doc) {
     try {
-      const { userName, _shop, _id: _schedule } = doc.data
-      if (!userName || !_shop || !_schedule) return logger.error("Malformed payload !")
+      const {
+        userName,
+        _shop,
+        _id: _schedule,
+        _user
+      } = doc.data
+      const toDeleteShopIds = []
+      if (!userName || !_shop || !_schedule || !_user) {
+        toDeleteShopIds.push(_shop)
+        return logger.error("Malformed payload ❎ !")
+      }
       const [user, shop] = await Promise.all([
         User.findOne({ userName })
           .sort({ createdAt: -1 })
@@ -68,9 +77,18 @@ module.exports = {
           })
           .exec()
       ])
-      if (user === null) return logger.error("Invaild user !")
-      if (shop === null) return logger.error("Invaild shop !")
-      if (!user.faretrackToken) return logger.error("Faretracktoken not found !!")
+      if (user === null) {
+        toDeleteShopIds.push(_shop)
+        return logger.error("Invaild user ❎ !")
+      }
+      if (shop === null) {
+        toDeleteShopIds.push(_shop)
+        return logger.error("Invaild shop ❎ !")
+      }
+      if (!user.faretrackToken) {
+        toDeleteShopIds.push(_shop)
+        return logger.error("Faretracktoken not found ❎ !!")
+      }
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
       const docValue = await shop._OD.reduce(async (acc, cur) => [
         {
@@ -123,24 +141,32 @@ module.exports = {
       // eslint-disable-next-line no-restricted-syntax
       for (const value of docValue) {
         try {
+          console.log("value ==>", value)
           // eslint-disable-next-line no-await-in-loop
           const Fsid = await addMarket(value, user.faretrackToken)
-          if (!Fsid) logger.error("Fsid not found !")
-          marketArr.push({
-            faretrackFrequency: value.frequency,
-            userName,
-            _shop,
-            _schedule,
-            fsId: Fsid
-          })
+          if (!Fsid) {
+            toDeleteShopIds.push(_shop)
+            logger.error("Fsid not found ❎!")
+          } else {
+            marketArr.push({
+              faretrackFrequency: value.frequency,
+              userName,
+              _shop,
+              _schedule,
+              fsId: Fsid
+            })
+          }
         } catch (error) {
-          logger.error(`Error ${error}`)
+          logger.error(`Error ❎ ${error}`)
         }
       }
+      if (toDeleteShopIds.length !== 0) {
+        await flightRatesApiRollback(toDeleteShopIds, _user)
+      }
       await Market.insertMany(marketArr)
-      return logger.info("Sucessfully shop and schedule mapped !!")
+      return logger.info("Sucessfully shop and schedule mapped ✅!!")
     } catch (err) {
-      return logger.error(`Error ${err}`)
+      return logger.error(`Error ❎ ${err}`)
     }
   }
 }
