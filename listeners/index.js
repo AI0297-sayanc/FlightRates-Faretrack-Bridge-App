@@ -80,7 +80,7 @@ module.exports = {
           shopname: shop.shopName,
           flyfrom: cur._flyFrom.airportCode,
           flyto: cur._flyTo.airportCode,
-          carriers: shop._carriers.map((c) => c.code), // Pending
+          carriers: shop._carriers.map((c) => +c.code), // Pending
           cabinclass: shop._cabinClasses.map((c) => c.code),
           sources: shop._sources.map((s) => +s.code),
           routetype: {
