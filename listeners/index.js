@@ -104,7 +104,7 @@ module.exports = {
             days: await scheduleConvert(doc.data.crontabExpression, "DAYS"),
             time: [
               {
-                starttime: doc.data.startTime, // Pending ask murali
+                starttime: await scheduleConvert(doc.data.crontabExpression, "STARTTIME"), // Pending ask murali
                 timezone: doc.data.timezoneName
               }
             ],
