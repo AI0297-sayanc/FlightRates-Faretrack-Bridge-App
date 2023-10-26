@@ -1,3 +1,4 @@
+const cuid = require("cuid")
 const User = require("../models/User")
 const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
@@ -72,7 +73,7 @@ module.exports = {
       if (shop === null) return logger.error("Invaild shop !")
       if (!user.faretrackToken) return logger.error("Faretracktoken not found !!")
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
-      const docValue = await shop._OD.reduce(async (accPromise, cur, index) => {
+      const docValue = await shop._OD.reduce(async (accPromise, cur) => {
         try {
           const acc = await accPromise
           const carriers = shop?._carriers.map((c) => +c.code)
@@ -83,7 +84,7 @@ module.exports = {
             {
               fsid: null,
               editshop: false,
-              shopname: `${shop?.shopName}_${index}`,
+              shopname: `${shop?.shopName}_${cuid.slug()}`,
               flyfrom: cur?._flyFrom?.airportCode,
               flyto: cur?._flyTo?.airportCode,
               carriers,
