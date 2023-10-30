@@ -1,7 +1,9 @@
 const NRP = require("node-redis-pubsub")
 const mongoose = require("mongoose")
-const logger = require("./lib/logger")
+
 require("dotenv").config()
+
+const logger = require("./lib/logger")
 
 const { handleLogin, handleMarket } = require("./listeners")
 
