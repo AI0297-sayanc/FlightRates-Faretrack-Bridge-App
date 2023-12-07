@@ -30,7 +30,6 @@ module.exports = {
   },
   async handleMarket(doc) {
     try {
-      console.log("doc ==> ", doc)
       const { userName, _shop, _id: _schedule } = doc.data
       if (!userName || !_shop || !_schedule) return logger.error("Malformed payload !")
       const [user, shop] = await Promise.all([
@@ -74,7 +73,7 @@ module.exports = {
       if (shop === null) return logger.error("Invaild shop !")
       if (!user.faretrackToken) return logger.error("Faretracktoken not found !!")
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
-      const docValue = await [shop._OD[0]].reduce(async (accPromise, cur) => {
+      const docValue = await shop._OD.reduce(async (accPromise, cur) => {
         try {
           const acc = await accPromise
           const carriers = shop?._carriers.map((c) => +c.code)
