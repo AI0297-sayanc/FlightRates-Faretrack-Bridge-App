@@ -4,7 +4,7 @@ const logger = require("../lib/logger")
 const { loginService, addMarket } = require("../services")
 const Market = require("../models/Market")
 const Shop = require("../models/flightrates/Shop")
-const { horizonDateConverter, scheduleConvert } = require("../lib")
+const { horizonDateConverter, scheduleConvert, horizonDayConverterOnlyForArry } = require("../lib")
 
 module.exports = {
   async handleLogin(doc) {
@@ -30,6 +30,7 @@ module.exports = {
   },
   async handleMarket(doc) {
     try {
+      console.log("doc ==> ", doc)
       const { userName, _shop, _id: _schedule } = doc.data
       if (!userName || !_shop || !_schedule) return logger.error("Malformed payload !")
       const [user, shop] = await Promise.all([
@@ -73,7 +74,7 @@ module.exports = {
       if (shop === null) return logger.error("Invaild shop !")
       if (!user.faretrackToken) return logger.error("Faretracktoken not found !!")
       const dateRange = await horizonDateConverter(shop.horizons, "DATE_RANGE")
-      const docValue = await shop._OD.reduce(async (accPromise, cur) => {
+      const docValue = await [shop._OD[0]].reduce(async (accPromise, cur) => {
         try {
           const acc = await accPromise
           const carriers = shop?._carriers.map((c) => +c.code)
@@ -97,7 +98,8 @@ module.exports = {
               },
               los: null,
               horizon: await horizonDateConverter(shop.horizons, "ONLY_SINGLE_DAY"),
-              horizon_days: await horizonDateConverter(shop.horizons, "DAY_RANGE"),
+              horizon_days: await horizonDayConverterOnlyForArry(shop.horizons, "DAY_RANGE"),
+              custom_horizon: await horizonDayConverterOnlyForArry(shop.horizons, "MULTIPLE_SINGLE_DAY"),
               horizon_startday: 0,
               horizon_endday: 0,
               horizon_startdate: dateRange.startDate,
@@ -130,10 +132,12 @@ module.exports = {
           return logger.error(error)
         }
       }, Promise.resolve([]))
+
       const marketArr = []
       // eslint-disable-next-line no-restricted-syntax
       for (const value of docValue) {
         try {
+          logger.info(value)
           // eslint-disable-next-line no-await-in-loop
           const Fsid = await addMarket(value, user.faretrackToken)
           if (!Fsid) logger.error("Fsid not found !")
